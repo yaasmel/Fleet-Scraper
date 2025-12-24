@@ -140,26 +140,30 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
     setSubmitStatus('idle');
 
     const payload = {
-      jobTitles: formData.jobTitles,
-      seniorityLevels: formData.seniorityLevels,
+      jobTitles: formData.jobTitles.join(','),
+      seniorityLevels: formData.seniorityLevels.join(','),
       industry: formData.industry,
       companySize: formData.companySize,
       companyType: formData.companyType,
-      countries: formData.countries,
+      countries: formData.countries.join(','),
       regionCity: formData.regionCity,
       yearsOfExperience: formData.yearsOfExperience,
-      keywords: formData.keywords,
+      keywords: formData.keywords.join(','),
       customSearchLogic: formData.customSearchLogic,
       timestamp: new Date().toISOString(),
     };
 
+    // Build query string from payload
+    const queryParams = new URLSearchParams();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value) {
+        queryParams.append(key, value);
+      }
+    });
+
     try {
-      const response = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      const response = await fetch(`${WEBHOOK_URL}?${queryParams.toString()}`, {
+        method: 'GET',
       });
 
       if (response.ok) {
