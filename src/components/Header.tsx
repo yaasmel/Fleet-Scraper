@@ -1,12 +1,7 @@
 import React from 'react';
 import { Truck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
-interface HeaderProps {
-  onCtaClick: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ onCtaClick }) => {
+export const Header: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4">
@@ -18,11 +13,6 @@ export const Header: React.FC<HeaderProps> = ({ onCtaClick }) => {
             </div>
             <span className="font-semibold text-foreground text-lg">Fleet Scraper</span>
           </div>
-
-          {/* CTA */}
-          <Button variant="cta" size="sm" onClick={onCtaClick}>
-            Start Targeting
-          </Button>
         </div>
       </div>
     </header>

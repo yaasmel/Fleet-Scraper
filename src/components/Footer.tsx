@@ -13,13 +13,13 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <p className="font-semibold text-foreground">Fleet Scraper</p>
-              <p className="text-sm text-muted-foreground">Built for Fleet Management Teams</p>
+              <p className="text-sm text-muted-foreground">Conçu pour les Équipes de Gestion de Flotte</p>
             </div>
           </div>
 
           {/* Copyright */}
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Fleet Scraper. All rights reserved.
+            © {new Date().getFullYear()} Fleet Scraper. Tous droits réservés.
           </p>
         </div>
       </div>

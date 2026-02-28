@@ -12,10 +12,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Send, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  Send,
+  Loader2,
+  CheckCircle2,
   AlertCircle,
   User,
   Building2,
@@ -24,15 +24,9 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const WEBHOOK_URL = 'https://serveur.mercusai.ovh/webhook-test/scraper';
+const WEBHOOK_URL = 'https://n8n-dadycar-d9fscpavbve9c6ew.francecentral-01.azurewebsites.net/webhook-test/scraper';
 
-const SENIORITY_LEVELS = [
-  { id: 'entry', label: 'Entry Level' },
-  { id: 'manager', label: 'Manager' },
-  { id: 'director', label: 'Director' },
-  { id: 'vp', label: 'VP' },
-  { id: 'c-level', label: 'C-Level' },
-];
+
 
 const COMPANY_SIZES = [
   '1-10 employees',
@@ -55,13 +49,7 @@ const COMPANY_TYPES = [
   'Sole Proprietorship',
 ];
 
-const YEARS_OF_EXPERIENCE = [
-  '0-1 years',
-  '1-2 years',
-  '3-5 years',
-  '6-10 years',
-  '10+ years',
-];
+
 
 const COUNTRIES = [
   'United States',
@@ -83,15 +71,14 @@ const COUNTRIES = [
 
 interface FormData {
   jobTitles: string[];
-  seniorityLevels: string[];
+  seniority: string;
   industry: string;
   companySize: string;
   companyType: string;
   countries: string[];
   regionCity: string;
-  yearsOfExperience: string;
   keywords: string[];
-  customSearchLogic: string;
+  expectedLeads: string;
 }
 
 interface ScraperFormProps {
@@ -102,28 +89,20 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  
+
   const [formData, setFormData] = useState<FormData>({
     jobTitles: [],
-    seniorityLevels: [],
+    seniority: '',
     industry: '',
     companySize: '',
     companyType: '',
     countries: [],
     regionCity: '',
-    yearsOfExperience: '',
     keywords: [],
-    customSearchLogic: '',
+    expectedLeads: '',
   });
 
-  const handleSeniorityChange = (levelId: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      seniorityLevels: checked
-        ? [...prev.seniorityLevels, levelId]
-        : prev.seniorityLevels.filter(l => l !== levelId),
-    }));
-  };
+
 
   const handleCountryChange = (country: string, checked: boolean) => {
     setFormData(prev => ({
@@ -140,17 +119,13 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
     setSubmitStatus('idle');
 
     const payload = {
-      jobTitles: formData.jobTitles,
-      seniorityLevels: formData.seniorityLevels,
+      jobTitle: formData.jobTitles.join(', '),
       industry: formData.industry,
       companySize: formData.companySize,
-      companyType: formData.companyType,
-      countries: formData.countries,
-      regionCity: formData.regionCity,
-      yearsOfExperience: formData.yearsOfExperience,
-      keywords: formData.keywords,
-      customSearchLogic: formData.customSearchLogic,
-      timestamp: new Date().toISOString(),
+      seniority: formData.seniority,
+      location: formData.countries.join(', ') + (formData.regionCity ? ' - ' + formData.regionCity : ''),
+      keywords: formData.keywords.join(', '),
+      expectedLeads: formData.expectedLeads ? parseInt(formData.expectedLeads, 10) : undefined
     };
 
     try {
@@ -165,8 +140,8 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
       if (response.ok) {
         setSubmitStatus('success');
         toast({
-          title: "Criteria Sent Successfully!",
-          description: "Your targeting criteria has been submitted to the automation system.",
+          title: "Critères Envoyés avec Succès !",
+          description: "Vos critères de ciblage ont été soumis au système d'automatisation.",
         });
       } else {
         throw new Error('Webhook request failed');
@@ -174,8 +149,8 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
     } catch (error) {
       setSubmitStatus('error');
       toast({
-        title: "Submission Failed",
-        description: "There was an error sending your criteria. Please try again.",
+        title: "Échec de la Soumission",
+        description: "Une erreur s'est produite lors de l'envoi de vos critères. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -189,9 +164,9 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
         <div className="max-w-4xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-12">
-            <h2 className="section-title mb-4">Define Your Target Audience</h2>
+            <h2 className="section-title mb-4">Définissez votre Audience Cible</h2>
             <p className="section-subtitle mx-auto">
-              Fill in the criteria below to precisely target fleet managers and decision-makers on LinkedIn.
+              Renseignez les critères ci-dessous pour cibler précisément les gestionnaires de flotte et les décideurs sur LinkedIn.
             </p>
           </div>
 
@@ -203,52 +178,40 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
                 <div className="p-2 bg-accent rounded-lg">
                   <User className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">Personal & Professional Filters</h3>
+                <h3 className="text-xl font-semibold text-foreground">Filtres Personnels et Professionnels</h3>
               </div>
 
               <div className="grid gap-6">
                 {/* Job Titles */}
                 <div>
-                  <Label className="input-label">Job Titles</Label>
+                  <Label className="input-label">Intitulés de Poste</Label>
                   <TagInput
                     tags={formData.jobTitles}
                     onTagsChange={(tags) => setFormData(prev => ({ ...prev, jobTitles: tags }))}
-                    placeholder="e.g., Fleet Manager, Transportation Director..."
+                    placeholder="Ex : Gestionnaire de Flotte, Directeur des Transports..."
                   />
-                  <p className="text-xs text-muted-foreground mt-1.5">Press Enter to add multiple titles</p>
+                  <p className="text-xs text-muted-foreground mt-1.5">Appuyez sur Entrée pour ajouter plusieurs intitulés</p>
                 </div>
 
                 {/* Seniority Level */}
                 <div>
-                  <Label className="input-label">Seniority Level</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    {SENIORITY_LEVELS.map((level) => (
-                      <label
-                        key={level.id}
-                        className={`flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${
-                          formData.seniorityLevels.includes(level.id)
-                            ? 'border-primary bg-accent text-accent-foreground'
-                            : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-                        }`}
-                      >
-                        <Checkbox
-                          checked={formData.seniorityLevels.includes(level.id)}
-                          onCheckedChange={(checked) => handleSeniorityChange(level.id, checked as boolean)}
-                          className="sr-only"
-                        />
-                        <span className="text-sm font-medium">{level.label}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <Label className="input-label">Niveau d'Expérience</Label>
+                  <Input
+                    type="text"
+                    value={formData.seniority}
+                    onChange={(e) => setFormData(prev => ({ ...prev, seniority: e.target.value }))}
+                    placeholder="Ex: Directeur IT, Head of Fleet, CEO..."
+                    className="h-12"
+                  />
                 </div>
 
                 {/* Industry */}
                 <div>
-                  <Label className="input-label">Industry</Label>
+                  <Label className="input-label">Secteur d'Activité</Label>
                   <Input
                     value={formData.industry}
                     onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
-                    placeholder="e.g., Transportation, Logistics, Trucking..."
+                    placeholder="Ex : Transport, Logistique, Camionnage..."
                     className="h-12"
                   />
                 </div>
@@ -261,19 +224,19 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
                 <div className="p-2 bg-accent rounded-lg">
                   <Building2 className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">Company Filters</h3>
+                <h3 className="text-xl font-semibold text-foreground">Filtres d'Entreprise</h3>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Company Size */}
                 <div>
-                  <Label className="input-label">Company Size</Label>
+                  <Label className="input-label">Taille de l'Entreprise</Label>
                   <Select
                     value={formData.companySize}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, companySize: value }))}
                   >
                     <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select company size" />
+                      <SelectValue placeholder="Sélectionnez la taille de l'entreprise" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
                       {COMPANY_SIZES.map((size) => (
@@ -285,13 +248,13 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
 
                 {/* Company Type */}
                 <div>
-                  <Label className="input-label">Company Type</Label>
+                  <Label className="input-label">Type d'Entreprise</Label>
                   <Select
                     value={formData.companyType}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, companyType: value }))}
                   >
                     <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select company type" />
+                      <SelectValue placeholder="Sélectionnez le type d'entreprise" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
                       {COMPANY_TYPES.map((type) => (
@@ -309,13 +272,13 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
                 <div className="p-2 bg-accent rounded-lg">
                   <MapPin className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">Location Filters</h3>
+                <h3 className="text-xl font-semibold text-foreground">Filtres de Localisation</h3>
               </div>
 
               <div className="grid gap-6">
                 {/* Countries */}
                 <div>
-                  <Label className="input-label">Countries</Label>
+                  <Label className="input-label">Pays</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 p-4 border border-input rounded-lg bg-background max-h-48 overflow-y-auto">
                     {COUNTRIES.map((country) => (
                       <label
@@ -334,11 +297,11 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
 
                 {/* Region / City */}
                 <div>
-                  <Label className="input-label">Region / City</Label>
+                  <Label className="input-label">Région / Ville</Label>
                   <Input
                     value={formData.regionCity}
                     onChange={(e) => setFormData(prev => ({ ...prev, regionCity: e.target.value }))}
-                    placeholder="e.g., California, London, Ontario..."
+                    placeholder="Ex : Californie, Londres, Paris..."
                     className="h-12"
                   />
                 </div>
@@ -351,49 +314,33 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
                 <div className="p-2 bg-accent rounded-lg">
                   <Settings2 className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">Advanced Filters</h3>
+                <h3 className="text-xl font-semibold text-foreground">Filtres Avancés</h3>
               </div>
 
-              <div className="grid gap-6">
-                {/* Years of Experience */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Expected Leads */}
                 <div>
-                  <Label className="input-label">Years of Experience</Label>
-                  <Select
-                    value={formData.yearsOfExperience}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, yearsOfExperience: value }))}
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select experience range" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {YEARS_OF_EXPERIENCE.map((exp) => (
-                        <SelectItem key={exp} value={exp}>{exp}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="input-label">Nombre de leads approximatif <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    required
+                    value={formData.expectedLeads}
+                    onChange={(e) => setFormData(prev => ({ ...prev, expectedLeads: e.target.value }))}
+                    placeholder="Ex : 500"
+                    className="h-12"
+                  />
                 </div>
 
                 {/* Keywords */}
                 <div>
-                  <Label className="input-label">Keywords</Label>
+                  <Label className="input-label">Mots-clés</Label>
                   <TagInput
                     tags={formData.keywords}
                     onTagsChange={(tags) => setFormData(prev => ({ ...prev, keywords: tags }))}
-                    placeholder="e.g., EV, telematics, fleet size, GPS tracking..."
+                    placeholder="Ex : VE, télématique, taille de la flotte, suivi GPS..."
                   />
-                  <p className="text-xs text-muted-foreground mt-1.5">Add skills, tools, or technologies to refine your search</p>
-                </div>
-
-                {/* Custom LinkedIn Search Logic */}
-                <div>
-                  <Label className="input-label">Custom LinkedIn Search Logic</Label>
-                  <Textarea
-                    value={formData.customSearchLogic}
-                    onChange={(e) => setFormData(prev => ({ ...prev, customSearchLogic: e.target.value }))}
-                    placeholder='e.g., ("fleet manager" OR "fleet director") AND (telematics OR "vehicle tracking") NOT "recruitment"'
-                    className="min-h-[100px] resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1.5">Use Boolean operators for advanced search queries</p>
+                  <p className="text-xs text-muted-foreground mt-1.5">Ajoutez des compétences, outils ou technologies pour affiner votre recherche</p>
                 </div>
               </div>
             </div>
@@ -410,22 +357,22 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Sending Criteria...
+                    Envoi des Critères...
                   </>
                 ) : submitStatus === 'success' ? (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    Criteria Sent!
+                    Critères Envoyés !
                   </>
                 ) : submitStatus === 'error' ? (
                   <>
                     <AlertCircle className="w-5 h-5" />
-                    Retry Sending
+                    Réessayer l'Envoi
                   </>
                 ) : (
                   <>
                     <Send className="w-5 h-5" />
-                    Send Scraping Criteria
+                    Envoyer les Critères de Scraping
                   </>
                 )}
               </Button>
@@ -433,7 +380,7 @@ export const ScraperForm: React.FC<ScraperFormProps> = ({ formRef }) => {
               {submitStatus === 'success' && (
                 <p className="mt-4 text-sm text-green-600 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
-                  Your targeting criteria has been sent to the automation system.
+                  Vos critères de ciblage ont été envoyés au système d'automatisation.
                 </p>
               )}
             </div>

@@ -3,7 +3,6 @@ import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { ScraperForm } from '@/components/ScraperForm';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
-import { ValuePropositionSection } from '@/components/ValuePropositionSection';
 import { Footer } from '@/components/Footer';
 
 const Index = () => {
@@ -15,12 +14,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onCtaClick={scrollToForm} />
+      <Header />
       <main>
         <HeroSection onCtaClick={scrollToForm} />
         <ScraperForm formRef={formRef} />
         <HowItWorksSection />
-        <ValuePropositionSection />
       </main>
       <Footer />
     </div>
